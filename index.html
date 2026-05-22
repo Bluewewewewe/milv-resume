@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>觅履 — AI简历优化平台</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap');
+:root{--bg:#050505;--bg2:#0a0a0a;--card:#0f0f0f;--border:#1a1a1a;--text:#f0f0f0;--dim:#777;--muted:#555;--accent:#f59e0b;--accent2:#fbbf24;--accent-bg:rgba(245,158,11,0.1);--accent-glow:rgba(245,158,11,0.25);--green:#10b981;--red:#ef4444;--blue:#3b82f6;--r:8px}
+*{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth}body{font-family:'Inter','Noto Sans SC',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;overflow-x:hidden}
+nav{position:fixed;top:0;left:0;right:0;z-index:1000;padding:.75rem 2rem;backdrop-filter:blur(24px);background:rgba(5,5,5,.8);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.nav-brand{display:flex;align-items:center;gap:.5rem}.nav-logo{width:32px;height:32px;background:linear-gradient(135deg,var(--accent),#f97316);border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1rem;color:#000}
+.nav-name{font-weight:700;font-size:1.1rem;letter-spacing:-.5px}.nav-name span{color:var(--accent)}
+.nav-links{display:flex;gap:2rem;list-style:none;align-items:center}.nav-links a{color:var(--dim);text-decoration:none;font-size:.85rem;transition:color .3s}.nav-links a:hover{color:var(--accent)}
+.nav-right{display:flex;align-items:center;gap:1rem}
+.nav-cta{padding:.5rem 1.25rem;background:var(--accent);color:#000;border:none;border-radius:var(--r);font-weight:600;font-size:.85rem;cursor:pointer;transition:all .3s}.nav-cta:hover{background:var(--accent2);box-shadow:0 0 20px var(--accent-glow)}
+.nav-btn{padding:.5rem 1rem;background:transparent;color:var(--dim);border:1px solid var(--border);border-radius:var(--r);font-size:.8rem;cursor:pointer;transition:all .3s}.nav-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+/* 登录弹窗 */
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.8);z-index:3000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.modal-overlay.visible{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:2.5rem;width:90%;max-width:400px;position:relative}
+.modal-close{position:absolute;top:1rem;right:1rem;background:none;border:none;color:var(--muted);font-size:1.5rem;cursor:pointer;transition:color .3s}.modal-close:hover{color:var(--text)}
+.modal h3{font-size:1.3rem;font-weight:700;margin-bottom:.5rem}
+.modal .subtitle{font-size:.85rem;color:var(--dim);margin-bottom:1.5rem}
+.form-group{margin-bottom:1rem}
+.form-group label{display:block;font-size:.8rem;font-weight:600;margin-bottom:.4rem;color:var(--dim)}
+.form-input{width:100%;padding:.75rem 1rem;background:var(--card);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:.9rem;font-family:inherit;transition:border-color .3s}
+.form-input:focus{outline:none;border-color:var(--accent)}
+.form-input::placeholder{color:var(--muted)}
+.form-btn{width:100%;padding:.85rem;background:var(--accent);color:#000;border:none;border-radius:var(--r);font-size:.9rem;font-weight:700;cursor:pointer;transition:all .3s;margin-top:.5rem}
+.form-btn:hover{background:var(--accent2);box-shadow:0 0 20px var(--accent-glow)}
+.form-btn:disabled{opacity:.5;cursor:not-allowed}
+.form-divider{text-align:center;color:var(--muted);font-size:.8rem;margin:1.25rem 0;position:relative}
+.form-divider::before,.form-divider::after{content:'';position:absolute;top:50%;width:40%;height:1px;background:var(--border)}
+.form-divider::before{left:0}.form-divider::after{right:0}
+.social-btns{display:flex;gap:.75rem}
+.social-btn{flex:1;padding:.7rem;background:var(--card);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:.85rem;cursor:pointer;transition:all .3s;display:flex;align-items:center;justify-content:center;gap:.5rem}
+.social-btn:hover{border-color:var(--accent);color:var(--accent)}
+.form-footer{text-align:center;margin-top:1rem;font-size:.8rem;color:var(--dim)}
+.form-footer a{color:var(--accent);text-decoration:none;cursor:pointer}.form-footer a:hover{text-decoration:underline}
+
+/* 兑换码弹窗 */
+.redeem-input{display:flex;gap:.5rem}
+.redeem-input input{flex:1}
+.redeem-input button{padding:.75rem 1.25rem;background:var(--accent);color:#000;border:none;border-radius:var(--r);font-weight:700;cursor:pointer;transition:all .3s;white-space:nowrap}
+.redeem-input button:hover{background:var(--accent2)}
+.redeem-result{margin-top:.75rem;padding:.75rem;border-radius:var(--r);font-size:.85rem;display:none}
+.redeem-result.success{display:block;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);color:var(--green)}
+.redeem-result.error{display:block;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:var(--red)}
+
+/* 用户状态 */
+.user-badge{display:none;align-items:center;gap:.5rem;padding:.35rem .75rem;background:var(--accent-bg);border:1px solid rgba(245,158,11,.2);border-radius:999px;font-size:.75rem;color:var(--accent)}
+.user-badge.visible{display:flex}
+.user-badge .name{max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.member-badge{background:linear-gradient(135deg,rgba(245,158,11,.15),rgba(249,115,22,.1));border-color:rgba(245,158,11,.4);color:var(--accent2)}
+
+.hero{min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:2rem;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(ellipse at 50% 50%,rgba(245,158,11,.06) 0%,transparent 50%);animation:glow 8s ease-in-out infinite alternate}
+@keyframes glow{0%{transform:translate(0,0)}100%{transform:translate(-5%,5%)}}
+.hero-content{position:relative;z-index:1;max-width:720px}
+.hero-badge{display:inline-flex;align-items:center;gap:.5rem;padding:.4rem 1rem;background:var(--accent-bg);border:1px solid rgba(245,158,11,.2);border-radius:999px;font-size:.8rem;color:var(--accent);margin-bottom:1.5rem}
+.hero-badge .dot{width:6px;height:6px;background:var(--accent);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.hero h1{font-size:clamp(2.5rem,7vw,4.5rem);font-weight:900;line-height:1.1;margin-bottom:1.25rem;letter-spacing:-2px}
+.hero h1 .accent{color:var(--accent)}.hero h1 .dim{color:var(--muted)}
+.hero-sub{font-size:1.15rem;color:var(--dim);max-width:520px;margin:0 auto 2.5rem;line-height:1.8}
+.hero-actions{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap}
+.btn{padding:.85rem 2rem;border:none;border-radius:var(--r);font-size:.9rem;font-weight:600;cursor:pointer;transition:all .3s;text-decoration:none;display:inline-flex;align-items:center;gap:.5rem}
+.btn-primary{background:var(--accent);color:#000}.btn-primary:hover{background:var(--accent2);box-shadow:0 0 30px var(--accent-glow);transform:translateY(-1px)}
+.btn-ghost{background:transparent;color:var(--text);border:1px solid var(--border)}.btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+.hero-stats{display:flex;gap:3rem;justify-content:center;margin-top:3.5rem;padding-top:3rem;border-top:1px solid var(--border)}
+.hero-stat-val{font-size:1.75rem;font-weight:800;color:var(--accent)}.hero-stat-label{font-size:.75rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:.25rem}
+.features{padding:6rem 2rem;max-width:1100px;margin:0 auto}
+.section-header{text-align:center;margin-bottom:4rem}.section-tag{font-size:.75rem;color:var(--accent);letter-spacing:3px;text-transform:uppercase;margin-bottom:.75rem}.section-title{font-size:2.25rem;font-weight:800;letter-spacing:-1px}
+.feature-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem}
+.feature-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:2rem;transition:all .3s;position:relative;overflow:hidden}
+.feature-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),transparent);opacity:0;transition:opacity .3s}
+.feature-card:hover{border-color:rgba(245,158,11,.3);transform:translateY(-4px)}.feature-card:hover::before{opacity:1}
+.feature-icon{font-size:2rem;margin-bottom:1rem}.feature-name{font-weight:700;font-size:1.05rem;margin-bottom:.5rem}.feature-desc{font-size:.85rem;color:var(--dim);line-height:1.7}
+.workflow{padding:6rem 2rem;background:var(--bg2)}.workflow-inner{max-width:1100px;margin:0 auto}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:2rem;margin-top:3rem}.step{text-align:center;position:relative}
+.step-num{width:48px;height:48px;background:var(--accent-bg);border:1px solid rgba(245,158,11,.3);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--accent);font-size:1.2rem;margin:0 auto 1rem}
+.step-title{font-weight:700;margin-bottom:.5rem}.step-desc{font-size:.85rem;color:var(--dim);line-height:1.7}.step-arrow{position:absolute;top:24px;right:-1rem;color:var(--muted);font-size:1.5rem}
+.upload-section{padding:6rem 2rem;max-width:700px;margin:0 auto}
+.upload-zone{border:2px dashed var(--border);border-radius:12px;padding:4rem 2rem;text-align:center;cursor:pointer;transition:all .3s;background:var(--card)}
+.upload-zone:hover,.upload-zone.dragover{border-color:var(--accent);background:var(--accent-bg)}
+.upload-icon{font-size:3rem;margin-bottom:1rem}.upload-title{font-size:1.1rem;font-weight:600;margin-bottom:.5rem}.upload-title span{color:var(--accent)}
+.upload-hint{font-size:.85rem;color:var(--dim)}.upload-formats{display:flex;gap:.5rem;justify-content:center;margin-top:1rem}.format-tag{font-size:.7rem;padding:.25rem .75rem;background:rgba(245,158,11,.08);border-radius:4px;color:var(--accent);letter-spacing:1px}
+.jd-section{margin-top:2rem}.jd-label{font-weight:600;margin-bottom:.5rem;font-size:.9rem}.jd-label span{color:var(--muted);font-weight:400;font-size:.8rem}
+.jd-input{width:100%;min-height:120px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:1rem;color:var(--text);font-family:inherit;font-size:.9rem;resize:vertical;transition:border-color .3s}
+.jd-input:focus{outline:none;border-color:var(--accent)}.jd-input::placeholder{color:var(--muted)}
+.analyze-btn{width:100%;margin-top:1.5rem;padding:1rem;background:var(--accent);color:#000;border:none;border-radius:var(--r);font-size:1rem;font-weight:700;cursor:pointer;transition:all .3s;letter-spacing:.5px}
+.analyze-btn:hover{background:var(--accent2);box-shadow:0 0 30px var(--accent-glow)}.analyze-btn:disabled{opacity:.5;cursor:not-allowed}
+.analyzing-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(5,5,5,.95);z-index:2000;display:none;align-items:center;justify-content:center}
+.analyzing-overlay.visible{display:flex}
+.analyzing-box{text-align:center;max-width:500px;padding:2rem}
+.analyzing-spinner{width:80px;height:80px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;margin:0 auto 2rem;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.analyzing-title{font-size:1.3rem;font-weight:700;margin-bottom:1.5rem}
+.analyzing-steps{text-align:left;margin:0 auto;max-width:400px}
+.analyzing-step{display:flex;align-items:center;gap:.75rem;padding:.6rem 0;font-size:.9rem;color:var(--muted);transition:all .4s}
+.analyzing-step.active{color:var(--accent)}.analyzing-step.done{color:var(--green)}.analyzing-step .icon{width:20px;text-align:center;flex-shrink:0}
+.report-section{padding:4rem 2rem;max-width:900px;margin:0 auto;display:none}
+.report-section.visible{display:block;animation:fadeUp .6s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+.report-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border)}
+.score-circle{width:120px;height:120px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--card);border:3px solid var(--accent);box-shadow:0 0 30px var(--accent-glow);position:relative}
+.score-value{font-size:2.5rem;font-weight:900;color:var(--accent);line-height:1}.score-label{font-size:.7rem;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin-top:.25rem}
+.score-ring{position:absolute;top:-4px;left:-4px;right:-4px;bottom:-4px;border-radius:50%;border:3px solid transparent;border-top-color:var(--accent);animation:spin 2s linear infinite;opacity:.3}
+.report-meta h3{font-size:1.3rem;font-weight:700}.report-meta .grade{color:var(--accent);font-weight:800}
+.report-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem}
+.report-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:1.5rem;opacity:0;transform:translateY(15px);transition:all .5s}
+.report-card.show{opacity:1;transform:translateY(0)}
+.report-card h4{font-size:.9rem;font-weight:700;margin-bottom:1rem;display:flex;align-items:center;gap:.5rem}
+.report-card ul{list-style:none;font-size:.85rem;color:var(--dim)}.report-card ul li{padding:.4rem 0;padding-left:1.25rem;position:relative}
+.report-card ul li::before{content:'';position:absolute;left:0;top:.75rem;width:6px;height:6px;border-radius:50%}
+.report-card.strengths ul li::before{background:var(--green)}.report-card.issues ul li::before{background:var(--red)}
+.report-card.suggestions ul li::before{background:var(--blue)}.report-card.jd-match ul li::before{background:var(--accent)}
+.progress-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:.5rem}
+.progress-fill{height:100%;border-radius:3px;width:0;transition:width 1.2s ease}.progress-fill.animate{width:var(--w)}
+.dimension-row{display:flex;justify-content:space-between;align-items:center;font-size:.85rem;margin-bottom:.5rem}.dimension-row .label{color:var(--dim)}.dimension-row .val{font-weight:700}
+.upgrade-banner{background:linear-gradient(135deg,rgba(245,158,11,.12),rgba(249,115,22,.08));border:1px solid rgba(245,158,11,.3);border-radius:var(--r);padding:2rem;text-align:center;margin-top:2rem;opacity:0;transform:translateY(15px);transition:all .5s}
+.upgrade-banner.show{opacity:1;transform:translateY(0)}
+.upgrade-banner h4{font-size:1.1rem;font-weight:700;margin-bottom:.5rem}.upgrade-banner p{font-size:.85rem;color:var(--dim);margin-bottom:1rem}
+.pricing{padding:6rem 2rem;background:var(--bg2)}.pricing-inner{max-width:900px;margin:0 auto}
+.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-top:3rem}
+.price-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:2rem;transition:all .3s;position:relative}
+.price-card.featured{border-color:var(--accent);background:rgba(245,158,11,.03)}
+.price-card.featured::before{content:'推荐';position:absolute;top:-1px;right:1rem;background:var(--accent);color:#000;font-size:.7rem;font-weight:700;padding:.25rem .75rem;border-radius:0 0 4px 4px}
+.price-card:hover{transform:translateY(-4px)}.price-name{font-weight:700;font-size:1.05rem;margin-bottom:.5rem}
+.price-amount{font-size:2rem;font-weight:900;color:var(--accent)}.price-amount span{font-size:.85rem;font-weight:400;color:var(--dim)}
+.price-desc{font-size:.8rem;color:var(--dim);margin:.5rem 0 1.25rem}
+.price-features{list-style:none;font-size:.85rem}.price-features li{padding:.4rem 0;color:var(--dim);display:flex;align-items:center;gap:.5rem}
+.price-features li .check{color:var(--green)}.price-features li .cross{color:var(--muted)}
+.price-btn{width:100%;margin-top:1.5rem;padding:.75rem;border:1px solid var(--border);border-radius:var(--r);background:transparent;color:var(--text);font-size:.85rem;font-weight:600;cursor:pointer;transition:all .3s}
+.price-card.featured .price-btn{background:var(--accent);color:#000;border-color:var(--accent)}
+.price-btn:hover{border-color:var(--accent);color:var(--accent)}
+.price-card.featured .price-btn:hover{background:var(--accent2);box-shadow:0 0 20px var(--accent-glow)}
+footer{text-align:center;padding:3rem 2rem;border-top:1px solid var(--border);color:var(--muted);font-size:.8rem}footer .brand{color:var(--accent);font-weight:600}
+@media(max-width:768px){.feature-grid{grid-template-columns:1fr}.steps{grid-template-columns:1fr}.step-arrow{display:none}.pricing-grid{grid-template-columns:1fr}.report-grid{grid-template-columns:1fr}.hero-stats{gap:1.5rem;flex-wrap:wrap}.nav-links{display:none}.nav-right .nav-btn{display:none}}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-brand"><div class="nav-logo">觅</div><div class="nav-name">觅<span>履</span></div></div>
+  <ul class="nav-links"><li><a href="#features">功能</a></li><li><a href="#workflow">流程</a></li><li><a href="#upload">开始</a></li><li><a href="#pricing">定价</a></li></ul>
+  <div class="nav-right">
+    <div class="user-badge" id="userBadge"><span class="name" id="userName"></span></div>
+    <button class="nav-btn" id="redeemNavBtn" onclick="openModal('redeemModal')">🔑 兑换</button>
+    <button class="nav-btn" id="loginNavBtn" onclick="openModal('loginModal')">登录</button>
+    <button class="nav-cta" id="navCta" onclick="document.getElementById('upload').scrollIntoView({behavior:'smooth'})">免费优化</button>
+  </div>
+</nav>
+
+<!-- 登录弹窗 -->
+<div class="modal-overlay" id="loginModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('loginModal')">×</button>
+    <h3 id="authTitle">登录</h3>
+    <p class="subtitle" id="authSubtitle">登录后保存分析记录，解锁更多功能</p>
+    <div id="authForm">
+      <div class="form-group" id="nameGroup" style="display:none"><label>用户名</label><input class="form-input" id="regName" placeholder="你怎么称呼"></div>
+      <div class="form-group"><label>邮箱</label><input class="form-input" id="authEmail" placeholder="your@email.com" type="email"></div>
+      <div class="form-group"><label>密码</label><input class="form-input" id="authPassword" placeholder="至少6位" type="password"></div>
+      <button class="form-btn" id="authBtn" onclick="handleAuth()">登录</button>
+      <div class="form-divider">或</div>
+      <div class="social-btns">
+        <button class="social-btn" onclick="handleSocial('google')">🟢 Google</button>
+        <button class="social-btn" onclick="handleSocial('github')">⚫ GitHub</button>
+      </div>
+      <div class="form-footer">
+        <span id="authSwitch">没有账号？<a onclick="toggleAuth()">注册</a></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 兑换码弹窗 -->
+<div class="modal-overlay" id="redeemModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('redeemModal')">×</button>
+    <h3>🔑 兑换会员</h3>
+    <p class="subtitle">输入兑换码，立即升级会员</p>
+    <div class="redeem-input">
+      <input class="form-input" id="redeemCode" placeholder="MILV-XXXX-XXXX" style="text-transform:uppercase">
+      <button onclick="handleRedeem()">兑换</button>
+    </div>
+    <div class="redeem-result" id="redeemResult"></div>
+    <div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border);text-align:center">
+      <p style="font-size:.8rem;color:var(--muted);margin-bottom:.75rem">还没有兑换码？</p>
+      <a href="https://mbd.pub" target="_blank" style="color:var(--accent);font-size:.85rem;text-decoration:none;font-weight:600">前往购买 →</a>
+    </div>
+  </div>
+</div>
+
+<section class="hero"><div class="hero-content"><div class="hero-badge"><span class="dot"></span>AI驱动 · 发现你的闪光点</div><h1>你的经历<br><span class="accent">比你以为的</span><br><span class="dim">更精彩</span></h1><p class="hero-sub">不只是改格式，而是深度挖掘你的职业经历，把平淡描述变成有说服力的成绩。</p><div class="hero-actions"><button class="btn btn-primary" onclick="document.getElementById('upload').scrollIntoView({behavior:'smooth'})">✨ 免费优化简历</button><button class="btn btn-ghost" onclick="document.getElementById('workflow').scrollIntoView({behavior:'smooth'})">了解流程</button></div><div class="hero-stats"><div><div class="hero-stat-val">3</div><div class="hero-stat-label">每月免费次数</div></div><div><div class="hero-stat-val">72</div><div class="hero-stat-label">简历平均提升分</div></div><div><div class="hero-stat-val">0</div><div class="hero-stat-label">起步费用</div></div></div></div></section>
+
+<section class="features" id="features"><div class="section-header"><div class="section-tag">Features</div><h2 class="section-title">帮你说出自己都没想到的闪光点</h2></div><div class="feature-grid"><div class="feature-card"><div class="feature-icon">🔍</div><div class="feature-name">深度解析</div><div class="feature-desc">上传简历，AI自动识别六大维度问题：完整性、量化程度、关键词匹配、表达清晰度、结构逻辑、格式规范</div></div><div class="feature-card"><div class="feature-icon">✍️</div><div class="feature-name">智能改写</div><div class="feature-desc">将「负责用户调研」改写为「主导10+场用户访谈，输出需求报告推动产品迭代」——STAR法则自动包装</div></div><div class="feature-card"><div class="feature-icon">🎯</div><div class="feature-name">JD精准匹配</div><div class="feature-desc">粘贴目标岗位JD，AI分析匹配度、识别缺失关键词，让简历直击HR需求</div></div><div class="feature-card"><div class="feature-icon">📊</div><div class="feature-name">0-100评分</div><div class="feature-desc">直观的量化评分系统，一眼看到简历在行业中的竞争力水平</div></div><div class="feature-card"><div class="feature-icon">📄</div><div class="feature-name">一键导出</div><div class="feature-desc">精美模板一键生成Word文件，支持多种风格配色，直接投递无压力</div></div><div class="feature-card"><div class="feature-icon">🗣</div><div class="feature-name">模拟面试</div><div class="feature-desc">基于简历+JD生成面试题库，AI点评你的回答，出完整面试报告</div></div></div></section>
+
+<section class="workflow" id="workflow"><div class="workflow-inner"><div class="section-header"><div class="section-tag">How it works</div><h2 class="section-title">三步搞定</h2></div><div class="steps"><div class="step"><div class="step-num">1</div><div class="step-title">上传简历</div><div class="step-desc">支持Word(.docx)和PDF格式，拖拽即可上传</div><div class="step-arrow">→</div></div><div class="step"><div class="step-num">2</div><div class="step-title">AI深度分析</div><div class="step-desc">六维度评分 + 问题诊断 + 改写建议 + JD匹配度</div><div class="step-arrow">→</div></div><div class="step"><div class="step-num">3</div><div class="step-title">获取优化版</div><div class="step-desc">查看分析报告，升级会员一键生成优化简历文件</div></div></div></div></section>
+
+<section class="upload-section" id="upload"><div class="section-header"><div class="section-tag">Get started</div><h2 class="section-title">开始优化</h2></div><div class="upload-zone" id="uploadZone"><div class="upload-icon">📎</div><div class="upload-title">拖拽简历到这里，或 <span>点击上传</span></div><div class="upload-hint">最大5MB</div><div class="upload-formats"><span class="format-tag">.DOCX</span><span class="format-tag">.PDF</span></div><input type="file" id="fileInput" accept=".docx,.pdf" style="display:none"></div><div id="fileInfo" style="display:none;margin-top:1rem;padding:1rem;background:var(--card);border:1px solid var(--border);border-radius:var(--r)"><div style="display:flex;justify-content:space-between;align-items:center"><span id="fileName" style="font-size:.9rem"></span><button id="removeFile" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.2rem">✕</button></div></div><div class="jd-section"><div class="jd-label">目标岗位JD <span>（选填，匹配更精准）</span></div><textarea class="jd-input" id="jdInput" placeholder="粘贴目标岗位的职位描述，AI会分析匹配度并推荐关键词..."></textarea></div><button class="analyze-btn" id="analyzeBtn" disabled>开始分析</button></section>
+
+<div class="analyzing-overlay" id="analyzingOverlay"><div class="analyzing-box"><div class="analyzing-spinner"></div><div class="analyzing-title">AI正在分析你的简历</div><div class="analyzing-steps"><div class="analyzing-step" id="step1"><span class="icon">○</span> 解析简历结构...</div><div class="analyzing-step" id="step2"><span class="icon">○</span> 提取关键信息...</div><div class="analyzing-step" id="step3"><span class="icon">○</span> 六维度深度评分...</div><div class="analyzing-step" id="step4"><span class="icon">○</span> 匹配目标岗位关键词...</div><div class="analyzing-step" id="step5"><span class="icon">○</span> 生成优化建议...</div></div></div></div>
+
+<section class="report-section" id="report"><div class="report-header"><div class="report-meta"><h3>分析报告 · <span class="grade">B+</span></h3><div style="font-size:.85rem;color:var(--dim);margin-top:.25rem">简历综合评分</div></div><div class="score-circle"><div class="score-ring"></div><div class="score-value" id="scoreDisplay">0</div><div class="score-label">Score</div></div></div><div class="report-card" id="dimCard" style="margin-bottom:1.5rem"><h4>📊 维度评分</h4><div class="dimension-row"><span class="label">完整性</span><span class="val">78%</span></div><div class="progress-bar"><div class="progress-fill" style="--w:78%;background:var(--green)"></div></div><div class="dimension-row" style="margin-top:.75rem"><span class="label">量化程度</span><span class="val">45%</span></div><div class="progress-bar"><div class="progress-fill" style="--w:45%;background:var(--red)"></div></div><div class="dimension-row" style="margin-top:.75rem"><span class="label">关键词匹配</span><span class="val">62%</span></div><div class="progress-bar"><div class="progress-fill" style="--w:62%;background:var(--accent)"></div></div><div class="dimension-row" style="margin-top:.75rem"><span class="label">表达清晰度</span><span class="val">70%</span></div><div class="progress-bar"><div class="progress-fill" style="--w:70%;background:var(--blue)"></div></div><div class="dimension-row" style="margin-top:.75rem"><span class="label">结构逻辑</span><span class="val">80%</span></div><div class="progress-bar"><div class="progress-fill" style="--w:80%;background:var(--green)"></div></div><div class="dimension-row" style="margin-top:.75rem"><span class="label">格式规范</span><span class="val">65%</span></div><div class="progress-bar"><div class="progress-fill" style="--w:65%;background:var(--accent)"></div></div></div><div class="report-grid"><div class="report-card strengths" id="card1"><h4>✅ 优势</h4><ul><li>工作经历时间线清晰连贯</li><li>技能标签与目标岗位匹配度较高</li><li>教育背景信息完整</li></ul></div><div class="report-card issues" id="card2"><h4>⚠️ 关键问题</h4><ul><li>工作描述缺乏量化数据支撑</li><li>项目成果未体现个人贡献权重</li><li>缺少与目标岗位匹配的关键词</li></ul></div><div class="report-card suggestions" id="card3"><h4>💡 改写建议</h4><ul><li>「负责用户调研」→「主导10+场用户访谈，输出需求报告推动产品迭代」</li><li>增加STAR法则包装项目经历</li></ul></div><div class="report-card jd-match" id="card4"><h4>🎯 JD匹配分析</h4><ul><li>匹配关键词：用户调研、数据分析、跨部门协作</li><li>缺失关键词：A/B测试、漏斗分析、SQL</li></ul></div></div><div class="upgrade-banner" id="upgradeBanner"><h4>✨ 一键生成优化简历</h4><p>升级会员，AI帮你自动改写+生成精美Word文件，改动对比一目了然</p><button class="btn btn-primary" style="font-size:.85rem" onclick="openModal('redeemModal')">升级会员 ¥99/年</button></div></section>
+
+<section class="pricing" id="pricing"><div class="pricing-inner"><div class="section-header"><div class="section-tag">Pricing</div><h2 class="section-title">选择适合你的方案</h2></div><div class="pricing-grid"><div class="price-card"><div class="price-name">免费版</div><div class="price-amount">¥0</div><div class="price-desc">体验核心功能，建立信任</div><ul class="price-features"><li><span class="check">✓</span> 每月3次分析</li><li><span class="check">✓</span> AI分析报告</li><li><span class="check">✓</span> 0-100评分</li><li><span class="check">✓</span> 问题诊断</li><li><span class="cross">✕</span> Word文件下载</li><li><span class="cross">✕</span> AI改写</li></ul><button class="price-btn" onclick="document.getElementById('upload').scrollIntoView({behavior:'smooth'})">免费开始</button></div><div class="price-card featured"><div class="price-name">年度会员</div><div class="price-amount">¥99<span>/年</span></div><div class="price-desc">完整解决方案，最受欢迎</div><ul class="price-features"><li><span class="check">✓</span> 无限次使用</li><li><span class="check">✓</span> AI智能改写</li><li><span class="check">✓</span> Word文件下载</li><li><span class="check">✓</span> 改动对比高亮</li><li><span class="check">✓</span> 3-5套精美模板</li><li><span class="check">✓</span> 邀请3人去水印</li></ul><button class="price-btn" onclick="handleBuy()">购买会员</button></div><div class="price-card"><div class="price-name">大会员</div><div class="price-amount">¥199<span>/年</span></div><div class="price-desc">猎头级深度服务</div><ul class="price-features"><li><span class="check">✓</span> 包含会员全部功能</li><li><span class="check">✓</span> 无水印导出</li><li><span class="check">✓</span> Agent深度咨询</li><li><span class="check">✓</span> AI模拟面试</li><li><span class="check">✓</span> 面试点评报告</li><li><span class="check">✓</span> 面试报告PDF</li></ul><button class="price-btn" onclick="handleBuy()">购买大会员</button></div></div></div></section>
+
+<footer><span class="brand">觅履</span> — 你的经历比你以为的更精彩 · © 2025</footer>
+
+<script>
+// === 弹窗 ===
+function openModal(id){document.getElementById(id).classList.add('visible')}
+function closeModal(id){document.getElementById(id).classList.remove('visible')}
+document.querySelectorAll('.modal-overlay').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('visible')})});
+
+// === 登录/注册切换 ===
+let isLogin=true;
+function toggleAuth(){
+  isLogin=!isLogin;
+  document.getElementById('authTitle').textContent=isLogin?'登录':'注册';
+  document.getElementById('authSubtitle').textContent=isLogin?'登录后保存分析记录，解锁更多功能':'创建账号，开始优化你的简历';
+  document.getElementById('authBtn').textContent=isLogin?'登录':'注册';
+  document.getElementById('nameGroup').style.display=isLogin?'none':'block';
+  document.getElementById('authSwitch').innerHTML=isLogin?'没有账号？<a onclick="toggleAuth()">注册</a>':'已有账号？<a onclick="toggleAuth()">登录</a>';
+}
+
+// === 模拟登录 ===
+function handleAuth(){
+  const email=document.getElementById('authEmail').value;
+  const pw=document.getElementById('authPassword').value;
+  if(!email||!pw){alert('请填写邮箱和密码');return}
+  // 模拟：直接登录成功
+  const name=email.split('@')[0];
+  loginUser(name);
+  closeModal('loginModal');
+}
+
+function handleSocial(type){
+  // 模拟：直接登录成功
+  loginUser(type==='google'?'Google用户':'GitHub用户');
+  closeModal('loginModal');
+}
+
+function loginUser(name){
+  localStorage.setItem('milv_user',name);
+  localStorage.setItem('milv_role','free');
+  updateUserUI(name,'free');
+}
+
+function updateUserUI(name,role){
+  const badge=document.getElementById('userBadge');
+  const btn=document.getElementById('loginNavBtn');
+  const nEl=document.getElementById('userName');
+  if(name){
+    badge.classList.add('visible');
+    nEl.textContent=name;
+    btn.textContent='退出';
+    btn.onclick=logoutUser;
+    if(role==='member'){
+      badge.classList.add('member-badge');
+      badge.innerHTML='⭐ <span class="name">'+name+'</span>';
+    }
+  }
+}
+
+function logoutUser(){
+  localStorage.removeItem('milv_user');
+  localStorage.removeItem('milv_role');
+  location.reload();
+}
+
+// 页面加载检查登录状态
+const savedUser=localStorage.getItem('milv_user');
+const savedRole=localStorage.getItem('milv_role');
+if(savedUser)updateUserUI(savedUser,savedRole);
+
+// === 兑换码 ===
+// 模拟有效兑换码
+const VALID_CODES={'MILV-TEST-1234':'member_year','MILV-VIP0-2025':'member_year','MILV-FREE-DEMO':'member_year'};
+
+function handleRedeem(){
+  const code=document.getElementById('redeemCode').value.trim().toUpperCase();
+  const result=document.getElementById('redeemResult');
+  result.className='redeem-result';
+
+  if(!code){result.textContent='请输入兑换码';result.classList.add('error');return}
+
+  // 模拟验证
+  if(VALID_CODES[code]){
+    result.textContent='🎉 兑换成功！会员已激活，有效期至2026年5月';
+    result.classList.add('success');
+    localStorage.setItem('milv_role','member');
+    const user=localStorage.getItem('milv_user')||'用户';
+    updateUserUI(user,'member');
+    setTimeout(()=>closeModal('redeemModal'),1500);
+  }else{
+    result.textContent='❌ 兑换码无效或已使用，请检查后重试';
+    result.classList.add('error');
+  }
+}
+
+// === 购买跳转 ===
+function handleBuy(){
+  const user=localStorage.getItem('milv_user');
+  if(!user){openModal('loginModal');return}
+  // 后期替换为面包多链接
+  alert('即将跳转到支付页面（演示阶段）\n\n实际上线时：这里会跳转到面包多购买页，付款后自动发送兑换码');
+  openModal('redeemModal');
+}
+
+// === 文件上传 ===
+const uploadZone=document.getElementById('uploadZone'),fileInput=document.getElementById('fileInput'),fileInfo=document.getElementById('fileInfo'),fileNameEl=document.getElementById('fileName'),removeFile=document.getElementById('removeFile'),analyzeBtn=document.getElementById('analyzeBtn');
+let selectedFile=null;
+uploadZone.addEventListener('click',()=>fileInput.click());
+uploadZone.addEventListener('dragover',e=>{e.preventDefault();uploadZone.classList.add('dragover')});
+uploadZone.addEventListener('dragleave',()=>uploadZone.classList.remove('dragover'));
+uploadZone.addEventListener('drop',e=>{e.preventDefault();uploadZone.classList.remove('dragover');if(e.dataTransfer.files[0])handleFile(e.dataTransfer.files[0])});
+fileInput.addEventListener('change',e=>{if(e.target.files[0])handleFile(e.target.files[0])});
+function handleFile(file){const ext=file.name.split('.').pop().toLowerCase();if(!['docx','pdf'].includes(ext)){alert('仅支持 .docx 和 .pdf 格式');return}if(file.size>5*1024*1024){alert('文件不能超过5MB');return}selectedFile=file;fileNameEl.textContent='📄 '+file.name;fileInfo.style.display='block';analyzeBtn.disabled=false}
+removeFile.addEventListener('click',()=>{selectedFile=null;fileInput.value='';fileInfo.style.display='none';analyzeBtn.disabled=true});
+
+// === 分析模拟 ===
+analyzeBtn.addEventListener('click',startAnalysis);
+function startAnalysis(){
+  analyzeBtn.disabled=true;
+  const overlay=document.getElementById('analyzingOverlay');
+  overlay.classList.add('visible');
+  const steps=['step1','step2','step3','step4','step5'];
+  let i=0;
+  function nextStep(){
+    if(i>=steps.length){setTimeout(showReport,600);return}
+    const el=document.getElementById(steps[i]);
+    el.classList.add('active');el.querySelector('.icon').textContent='◐';
+    setTimeout(()=>{el.classList.remove('active');el.classList.add('done');el.querySelector('.icon').textContent='✓';i++;nextStep()},800+Math.random()*600);
+  }
+  nextStep();
+}
+
+function showReport(){
+  document.getElementById('analyzingOverlay').classList.remove('visible');
+  const report=document.getElementById('report');
+  report.classList.add('visible');
+  report.scrollIntoView({behavior:'smooth'});
+  let score=0;const target=72;const scoreEl=document.getElementById('scoreDisplay');
+  const t=setInterval(()=>{score+=1;if(score>=target){score=target;clearInterval(t)}scoreEl.textContent=score},25);
+  setTimeout(()=>document.querySelectorAll('.progress-fill').forEach(el=>el.classList.add('animate')),300);
+  setTimeout(()=>document.getElementById('dimCard').classList.add('show'),200);
+  setTimeout(()=>document.getElementById('card1').classList.add('show'),600);
+  setTimeout(()=>document.getElementById('card2').classList.add('show'),900);
+  setTimeout(()=>document.getElementById('card3').classList.add('show'),1200);
+  setTimeout(()=>document.getElementById('card4').classList.add('show'),1500);
+  setTimeout(()=>document.getElementById('upgradeBanner').classList.add('show'),2000);
+  analyzeBtn.disabled=false;
+}
+</script>
+</body>
+</html>
