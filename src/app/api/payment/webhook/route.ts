@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
 
     // custom_data里我们传了userId
     const userId = custom_data?.userId
-    const plan = custom_data?.plan || 'annual'
+    const plan = custom_data?.plan || 'monthly'
 
     if (!userId) {
       return NextResponse.json({ error: 'missing userId' }, { status: 400 })
@@ -29,17 +29,21 @@ export async function POST(req: NextRequest) {
 
     const admin = createAdminClient()
 
-    // 更新会员状态
-    const durationDays = plan === 'annual' ? 365 : 99999
-    const quota = plan === 'annual' ? 999 : 9999
+    // 次数和时长映射
+    const quotaMap: Record<string, number> = { weekly: 5, monthly: 12, quarterly: 30 }
+    const durationMap: Record<string, number> = { weekly: 7, monthly: 30, quarterly: 90 }
 
+    const quota = quotaMap[plan] || 12
+    const days = durationMap[plan] || 30
+
+    // 更新会员状态（次数不累计，直接覆盖为新配额）
     const { error } = await admin
       .from('memberships')
       .upsert({
         user_id: userId,
         plan,
         remaining_quota: quota,
-        expires_at: new Date(Date.now() + durationDays * 86400000).toISOString(),
+        expires_at: new Date(Date.now() + days * 86400000).toISOString(),
         payment_method: 'mianbaoduo',
         payment_order: order_no,
         updated_at: new Date().toISOString(),
