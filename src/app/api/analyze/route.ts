@@ -1,66 +1,172 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createAdminClient } from '@/lib/supabase'
+import { checkRateLimit, getClientIp, DEFAULT_ANALYZE_LIMIT } from '@/lib/rate-limit'
 
-// AI简历分析接口
-// 前端上传简历文本 + JD，后端调AI返回分析报告
+// AI简历分析接口（异步队列模式）
+// 提交分析 → 返回jobId → 前端轮询 /api/analyze-status?id=xxx
 export async function POST(req: NextRequest) {
   try {
-    const { resumeText, jobDescription } = await req.json()
+    // 1. IP限流
+    const ip = getClientIp(req)
+    const rateCheck = checkRateLimit(ip, DEFAULT_ANALYZE_LIMIT)
+    if (!rateCheck.allowed) {
+      return NextResponse.json({
+        error: '今日分析次数已用完，请明天再来',
+        resetAt: rateCheck.resetAt,
+      }, { status: 429 })
+    }
+
+    const { resumeText, jobDescription, userId } = await req.json()
 
     if (!resumeText) {
       return NextResponse.json({ error: '请提供简历内容' }, { status: 400 })
     }
 
-    const apiKey = process.env.AI_API_KEY
-    const apiUrl = process.env.AI_API_URL || 'https://api.coze.cn/v1/chat'
+    const admin = createAdminClient()
 
-    if (!apiKey) {
-      // 没配API key时返回模拟数据（开发模式）
-      return NextResponse.json(getMockAnalysis())
+    // 2. 检查会员配额（如果已登录）
+    if (userId) {
+      const { data: membership } = await admin
+        .from('memberships')
+        .select('plan, remaining_quota, expires_at')
+        .eq('user_id', userId)
+        .single()
+
+      if (membership) {
+        // 检查是否过期
+        if (membership.expires_at && new Date(membership.expires_at) < new Date()) {
+          return NextResponse.json({ error: '会员已过期，请续费或使用兑换码' }, { status: 403 })
+        }
+        // 免费用户检查配额
+        if (membership.plan === 'free' && membership.remaining_quota <= 0) {
+          return NextResponse.json({
+            error: '免费次数已用完，升级会员获取无限次分析',
+            remainingQuota: 0,
+          }, { status: 403 })
+        }
+      }
     }
 
-    // 调用Coze Bot API
-    const prompt = buildPrompt(resumeText, jobDescription)
+    // 3. 写入数据库，状态=pending（排队中）
+    const { data: analysis, error: insertError } = await admin
+      .from('analyses')
+      .insert({
+        user_id: userId || null,
+        resume_text: resumeText,
+        job_description: jobDescription || null,
+        overall_score: 0,
+        result: { status: 'pending' },
+      })
+      .select('id')
+      .single()
 
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        bot_id: process.env.COZE_BOT_ID,
-        user_id: 'milv-user',
-        stream: false,
-        auto_save_history: false,
-        additional_messages: [{
-          role: 'user',
-          content: prompt,
-          content_type: 'text',
-        }],
-      }),
+    if (insertError || !analysis) {
+      console.error('Insert error:', insertError)
+      return NextResponse.json({ error: '提交失败' }, { status: 500 })
+    }
+
+    // 4. 扣减配额
+    if (userId) {
+      await admin.rpc('decrement_quota', { user_id_input: userId })
+    }
+
+    // 5. 触发后台分析（不await，让前端去轮询）
+    // 在生产环境中，这里应该用消息队列或Edge Function
+    // 目前用 fire-and-forget 模式
+    processAnalysis(analysis.id, resumeText, jobDescription).catch(err => {
+      console.error('Background analysis failed:', err)
     })
 
-    if (!response.ok) {
-      const err = await response.text()
-      console.error('AI API error:', err)
-      // AI调用失败也返回模拟数据，保证体验
-      return NextResponse.json(getMockAnalysis())
-    }
-
-    const data = await response.json()
-    const aiContent = data?.messages?.[0]?.content || data?.output?.text || ''
-
-    // 尝试解析AI返回的JSON，解析失败就返回模拟数据
-    try {
-      const parsed = JSON.parse(aiContent)
-      return NextResponse.json(parsed)
-    } catch {
-      return NextResponse.json(getMockAnalysis())
-    }
+    return NextResponse.json({
+      id: analysis.id,
+      status: 'pending',
+      message: '分析已提交，正在排队处理',
+      remainingRequests: rateCheck.remaining,
+    })
 
   } catch (error) {
     console.error('Analyze error:', error)
-    return NextResponse.json({ error: '分析失败，请重试' }, { status: 500 })
+    return NextResponse.json({ error: '分析提交失败' }, { status: 500 })
+  }
+}
+
+// 后台分析函数
+async function processAnalysis(
+  analysisId: string,
+  resumeText: string,
+  jobDescription?: string
+) {
+  const admin = createAdminClient()
+
+  try {
+    // 更新状态为processing
+    await admin
+      .from('analyses')
+      .update({ result: { status: 'processing' } })
+      .eq('id', analysisId)
+
+    const apiKey = process.env.AI_API_KEY
+    const apiUrl = process.env.AI_API_URL || 'https://api.coze.cn/v1/chat'
+
+    let analysisResult: Record<string, unknown>
+
+    if (!apiKey) {
+      // 没配API key → 模拟延迟后返回模拟数据
+      await new Promise(r => setTimeout(r, 3000))
+      analysisResult = getMockAnalysis()
+    } else {
+      // 调用AI API
+      const prompt = buildPrompt(resumeText, jobDescription)
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          bot_id: process.env.COZE_BOT_ID,
+          user_id: `milv-${analysisId}`,
+          stream: false,
+          auto_save_history: false,
+          additional_messages: [{
+            role: 'user',
+            content: prompt,
+            content_type: 'text',
+          }],
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`AI API error: ${response.status}`)
+      }
+
+      const data = await response.json()
+      const aiContent = data?.messages?.[0]?.content || data?.output?.text || ''
+
+      try {
+        analysisResult = JSON.parse(aiContent)
+      } catch {
+        analysisResult = getMockAnalysis()
+      }
+    }
+
+    // 更新结果
+    await admin
+      .from('analyses')
+      .update({
+        result: analysisResult,
+        overall_score: (analysisResult as { overallScore: number }).overallScore || 0,
+      })
+      .eq('id', analysisId)
+
+  } catch (error) {
+    console.error('Process analysis error:', error)
+    // 标记失败
+    await admin
+      .from('analyses')
+      .update({ result: { status: 'failed', error: '分析失败' } })
+      .eq('id', analysisId)
   }
 }
 
@@ -97,7 +203,6 @@ ${resumeText}`
   return prompt
 }
 
-// 开发模式模拟数据
 function getMockAnalysis() {
   return {
     overallScore: 58,
