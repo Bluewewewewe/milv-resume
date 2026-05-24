@@ -27,8 +27,14 @@ export async function GET(req: NextRequest) {
       })
     }
 
-    // 检查是否过期
+    // 检查是否过期 → 次数归零
     if (data.expires_at && new Date(data.expires_at) < new Date()) {
+      // 过期了，次数归零（不累计）
+      await admin
+        .from('memberships')
+        .update({ remaining_quota: 0, plan: 'free', updated_at: new Date().toISOString() })
+        .eq('user_id', userId)
+
       return NextResponse.json({
         plan: 'free',
         remaining_quota: 0,
