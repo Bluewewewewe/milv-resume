@@ -340,16 +340,37 @@ export default function Home() {
 
       {/* 定价 */}
       <section id="pricing" className="py-20 px-6 bg-surface-card/50">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           <h2 className="text-3xl font-bold text-center mb-4">按需选择，灵活付费</h2>
-          <p className="text-text-muted text-center mb-14">先免费体验，有效果再升级</p>
-          <div className="grid md:grid-cols-4 gap-5">
-            <PriceCard plan="free" price="¥0" desc="体验" features={['2次AI分析', '基础优化建议', '关键词检查']} current={user?.plan === 'free'} />
-            <PriceCard plan="weekly" price="¥19.9" desc="/周" features={['5次AI分析', '深度优化报告', 'JD精准匹配', '改写示例']} current={user?.plan === 'weekly'} />
-            <PriceCard plan="monthly" price="¥49" desc="/月" features={['12次AI分析', '全部优化功能', 'JD精准匹配', '改写示例', '优先客服']} current={user?.plan === 'monthly'} highlight badge="最受欢迎" />
-            <PriceCard plan="quarterly" price="¥99" desc="/季" features={['30次AI分析', '全部优化功能', '求职全周期覆盖', '新功能优先体验']} current={user?.plan === 'quarterly'} badge="最划算" />
+          <p className="text-text-muted text-center mb-14">先免费体验，有效果再升级 · 次数不累计，到期归零</p>
+          
+          {/* 基础版 */}
+          <div className="mb-10">
+            <div className="flex items-center gap-3 mb-6">
+              <h3 className="text-xl font-bold">基础版</h3>
+              <span className="text-text-muted text-sm">AI分析 + 基础建议 + 关键词检查</span>
+            </div>
+            <div className="grid md:grid-cols-3 gap-5">
+              <PriceCard plan="basic_weekly" price="¥9.9" desc="/周" features={['5次AI分析', '基础优化建议', '关键词检查']} current={user?.plan === 'basic_weekly'} />
+              <PriceCard plan="basic_monthly" price="¥29" desc="/月" features={['12次AI分析', '基础优化建议', '关键词检查']} current={user?.plan === 'basic_monthly'} badge="热门" />
+              <PriceCard plan="basic_quarterly" price="¥59" desc="/季" features={['30次AI分析', '基础优化建议', '关键词检查']} current={user?.plan === 'basic_quarterly'} />
+            </div>
           </div>
-          <p className="text-center text-text-muted text-sm mt-8">💡 首次用户专享：周卡仅 ¥9.9，体验后再决定</p>
+
+          {/* 专业版 */}
+          <div>
+            <div className="flex items-center gap-3 mb-6">
+              <h3 className="text-xl font-bold">专业版</h3>
+              <span className="text-brand text-sm font-medium">推荐 · 全部功能 + JD匹配 + 改写示例</span>
+            </div>
+            <div className="grid md:grid-cols-3 gap-5">
+              <PriceCard plan="pro_weekly" price="¥19.9" desc="/周" features={['5次AI分析', '全部优化功能', 'JD精准匹配', '逐条改写示例']} current={user?.plan === 'pro_weekly'} />
+              <PriceCard plan="pro_monthly" price="¥49" desc="/月" features={['12次AI分析', '全部优化功能', 'JD精准匹配', '逐条改写示例', '优先客服']} current={user?.plan === 'pro_monthly'} highlight badge="最受欢迎" />
+              <PriceCard plan="pro_quarterly" price="¥99" desc="/季" features={['30次AI分析', '全部优化功能', '求职全周期覆盖', '新功能优先体验']} current={user?.plan === 'pro_quarterly'} badge="最划算" />
+            </div>
+          </div>
+
+          <p className="text-center text-text-muted text-sm mt-10">💡 首次用户专享：基础版周卡仅 ¥4.9，体验后再决定</p>
         </div>
       </section>
 
@@ -484,7 +505,12 @@ function PriceCard({ plan, price, desc, features, current, highlight, badge }: {
     <div className={`rounded-2xl p-6 border transition-all ${highlight ? 'border-brand bg-brand/5 scale-105' : 'border-border bg-surface-card'}`}>
       {badge && <div className="text-center mb-3"><span className="bg-brand text-white text-xs px-3 py-1 rounded-full font-medium">{badge}</span></div>}
       <div className="text-center mb-6">
-        <h3 className="font-bold text-lg mb-1">{plan === 'free' ? '免费体验' : plan === 'weekly' ? '周卡' : plan === 'monthly' ? '月卡' : '季卡'}</h3>
+        <h3 className="font-bold text-lg mb-1">
+          {plan === 'free' ? '免费体验' : 
+           plan.startsWith('basic_') ? '基础版' + (plan.endsWith('weekly') ? '·周卡' : plan.endsWith('monthly') ? '·月卡' : '·季卡') :
+           plan.startsWith('pro_') ? '专业版' + (plan.endsWith('weekly') ? '·周卡' : plan.endsWith('monthly') ? '·月卡' : '·季卡') :
+           plan}
+        </h3>
         <div className="flex items-baseline justify-center gap-1"><span className="text-4xl font-black">{price}</span><span className="text-text-muted text-sm">{desc}</span></div>
       </div>
       <ul className="space-y-3 mb-6">{features.map((f) => <li key={f} className="text-text-secondary text-sm flex items-center gap-2"><span className="text-brand">✓</span>{f}</li>)}</ul>
