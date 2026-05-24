@@ -250,6 +250,7 @@ export default function Home() {
             <div className="text-center"><div className="text-3xl font-black text-brand">72</div><div className="text-text-muted text-sm mt-1">简历平均提升分</div></div>
             <div className="text-center"><div className="text-3xl font-black text-brand">¥9.9</div><div className="text-text-muted text-sm mt-1">首周特惠</div></div>
           </div>
+          <p className="text-center text-text-muted/50 text-xs mt-4">· 次数不累计，到期自动归零 ·</p>
         </div>
       </section>
 
@@ -344,9 +345,9 @@ export default function Home() {
           <p className="text-text-muted text-center mb-14">先免费体验，有效果再升级</p>
           <div className="grid md:grid-cols-4 gap-5">
             <PriceCard plan="free" price="¥0" desc="体验" features={['2次AI分析', '基础优化建议', '关键词检查']} current={user?.plan === 'free'} />
-            <PriceCard plan="weekly" price="¥19.9" desc="/周" features={['15次AI分析', '深度优化报告', 'JD精准匹配', '改写示例']} current={user?.plan === 'weekly'} />
-            <PriceCard plan="monthly" price="¥49" desc="/月" features={['50次AI分析', '全部优化功能', 'JD精准匹配', '改写示例', '优先客服']} current={user?.plan === 'monthly'} highlight badge="最受欢迎" />
-            <PriceCard plan="quarterly" price="¥99" desc="/季" features={['120次AI分析', '全部优化功能', '求职全周期覆盖', '新功能优先体验']} current={user?.plan === 'quarterly'} badge="最划算" />
+            <PriceCard plan="weekly" price="¥19.9" desc="/周" features={['5次AI分析', '深度优化报告', 'JD精准匹配', '改写示例']} current={user?.plan === 'weekly'} />
+            <PriceCard plan="monthly" price="¥49" desc="/月" features={['12次AI分析', '全部优化功能', 'JD精准匹配', '改写示例', '优先客服']} current={user?.plan === 'monthly'} highlight badge="最受欢迎" />
+            <PriceCard plan="quarterly" price="¥99" desc="/季" features={['30次AI分析', '全部优化功能', '求职全周期覆盖', '新功能优先体验']} current={user?.plan === 'quarterly'} badge="最划算" />
           </div>
           <p className="text-center text-text-muted text-sm mt-8">💡 首次用户专享：周卡仅 ¥9.9，体验后再决定</p>
         </div>
