@@ -30,8 +30,14 @@ export async function POST(req: NextRequest) {
     const admin = createAdminClient()
 
     // 次数和时长映射
-    const quotaMap: Record<string, number> = { weekly: 5, monthly: 12, quarterly: 30 }
-    const durationMap: Record<string, number> = { weekly: 7, monthly: 30, quarterly: 90 }
+    const quotaMap: Record<string, number> = {
+      basic_weekly: 5, basic_monthly: 12, basic_quarterly: 30,
+      pro_weekly: 5, pro_monthly: 12, pro_quarterly: 30,
+    }
+    const durationMap: Record<string, number> = {
+      basic_weekly: 7, basic_monthly: 30, basic_quarterly: 90,
+      pro_weekly: 7, pro_monthly: 30, pro_quarterly: 90,
+    }
 
     const quota = quotaMap[plan] || 12
     const days = durationMap[plan] || 30
