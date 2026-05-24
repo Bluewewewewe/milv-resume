@@ -229,13 +229,16 @@ export default function Home() {
       <section className="pt-32 pb-20 px-6">
         <div className="max-w-4xl mx-auto text-center">
           <span className="inline-block px-4 py-1.5 bg-brand/10 text-brand text-sm rounded-full mb-8 border border-brand/20">
-            AI驱动 · 发现你的闪光点
+            不是改排版，是改内容
           </span>
           <h1 className="text-5xl md:text-7xl font-black leading-tight mb-6">
             你的经历<br /><span className="text-brand">比你以为的</span><br /><span className="text-text-secondary">更精彩</span>
           </h1>
-          <p className="text-text-muted text-lg max-w-xl mx-auto mb-10">
-            不只是改格式，而是深度挖掘你的职业经历，把平淡描述变成有说服力的成绩。
+          <p className="text-text-muted text-lg max-w-xl mx-auto mb-4">
+            别人帮你调格式，我们帮你重新发现经历的价值。
+          </p>
+          <p className="text-text-muted/60 text-sm max-w-md mx-auto mb-10">
+            AI深度拆解你的每一段经历，把"做了什么"变成"做成了什么"，让HR看到真正的你。
           </p>
           <div className="flex gap-4 justify-center">
             <button onClick={handleAnalyze} className="px-8 py-4 bg-brand hover:bg-brand-dark text-white font-bold rounded-xl transition-all hover:scale-105 flex items-center gap-2">
@@ -257,19 +260,41 @@ export default function Home() {
       {/* 功能 */}
       <section id="features" className="py-20 px-6">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-4">不只是改语法，是重新发现你</h2>
-          <p className="text-text-muted text-center mb-14">AI从四个维度深度拆解你的简历</p>
+          <h2 className="text-3xl font-bold text-center mb-4">和改排版的工具不一样</h2>
+          <p className="text-text-muted text-center mb-14">格式谁都会调，但你的经历值不值得重写？</p>
           <div className="grid md:grid-cols-4 gap-6">
             {[
-              { icon: '📝', title: '内容质量', desc: '量化成果、补充关键信息、挖掘隐藏亮点' },
-              { icon: '🏗️', title: '结构逻辑', desc: '优化排版逻辑、突出核心优势、调整信息层级' },
-              { icon: '🔑', title: '关键词匹配', desc: '对标JD关键词、提升ATS通过率、精准命中招聘需求' },
-              { icon: '💬', title: '表达力提升', desc: '动词驱动、STAR法则、从"做了什么"到"做成了什么"' },
+              { icon: '🔍', title: '深度拆解', desc: '不是检查错别字，是重新审视你每段经历的表达方式' },
+              { icon: '📊', title: '量化发现', desc: '帮你找到经历里被忽略的成果和数据' },
+              { icon: '🎯', title: '精准对标', desc: '对照目标岗位，让你的简历讲HR想听的话' },
+              { icon: '✍️', title: '逐条改写', desc: '不是给你建议让你自己改，是直接写给你看' },
             ].map((item) => (
               <div key={item.title} className="p-6 bg-surface-card rounded-2xl border border-border hover:border-brand/40 transition-all group">
                 <div className="text-3xl mb-4">{item.icon}</div>
                 <h3 className="font-bold text-lg mb-2 group-hover:text-brand transition-colors">{item.title}</h3>
                 <p className="text-text-muted text-sm leading-relaxed">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+          {/* 差异对比 */}
+          <div className="mt-14 bg-surface-card rounded-2xl border border-border overflow-hidden">
+            <div className="grid grid-cols-3 text-center border-b border-border">
+              <div className="py-4 px-4 text-text-muted text-sm font-medium">对比项</div>
+              <div className="py-4 px-4 text-text-muted text-sm font-medium">传统简历工具</div>
+              <div className="py-4 px-4 text-brand text-sm font-bold">觅履</div>
+            </div>
+            {[
+              ['改排版格式', '✅', '❌ 不做'],
+              ['检查错别字', '✅', '✅ 顺带'],
+              ['AI重写经历描述', '❌', '✅ 核心功能'],
+              ['量化隐藏成果', '❌', '✅ 核心功能'],
+              ['对标JD关键词', '❌', '✅ 核心功能'],
+              ['逐条改写示例', '❌', '✅ 直接可用'],
+            ].map(([label, old, neu], i) => (
+              <div key={i} className={`grid grid-cols-3 text-center text-sm ${i % 2 === 0 ? 'bg-surface-card' : 'bg-surface-hover/30'}`}>
+                <div className="py-3.5 px-4 text-text-secondary font-medium">{label}</div>
+                <div className="py-3.5 px-4 text-text-muted">{old}</div>
+                <div className="py-3.5 px-4 text-text-primary font-medium">{neu}</div>
               </div>
             ))}
           </div>
@@ -348,12 +373,12 @@ export default function Home() {
           <div className="mb-10">
             <div className="flex items-center gap-3 mb-6">
               <h3 className="text-xl font-bold">基础版</h3>
-              <span className="text-text-muted text-sm">AI分析 + 基础建议 + 关键词检查</span>
+              <span className="text-text-muted text-sm">AI分析 + 优化建议 + 关键词检查</span>
             </div>
             <div className="grid md:grid-cols-3 gap-5">
-              <PriceCard plan="basic_weekly" price="¥9.9" desc="/周" features={['5次AI分析', '基础优化建议', '关键词检查']} current={user?.plan === 'basic_weekly'} />
-              <PriceCard plan="basic_monthly" price="¥29" desc="/月" features={['12次AI分析', '基础优化建议', '关键词检查']} current={user?.plan === 'basic_monthly'} badge="热门" />
-              <PriceCard plan="basic_quarterly" price="¥59" desc="/季" features={['30次AI分析', '基础优化建议', '关键词检查']} current={user?.plan === 'basic_quarterly'} />
+              <PriceCard plan="basic_weekly" price="¥9.9" desc="/周" dailyPrice="¥1.4/天" features={['5次AI分析', '优化建议', '关键词检查']} current={user?.plan === 'basic_weekly'} />
+              <PriceCard plan="basic_monthly" price="¥29" desc="/月" dailyPrice="¥0.97/天" features={['12次AI分析', '优化建议', '关键词检查']} current={user?.plan === 'basic_monthly'} badge="热门" savings="省¥9.8" />
+              <PriceCard plan="basic_quarterly" price="¥59" desc="/季" dailyPrice="¥0.66/天" features={['30次AI分析', '优化建议', '关键词检查']} current={user?.plan === 'basic_quarterly'} savings="省¥28" />
             </div>
           </div>
 
@@ -361,12 +386,12 @@ export default function Home() {
           <div>
             <div className="flex items-center gap-3 mb-6">
               <h3 className="text-xl font-bold">专业版</h3>
-              <span className="text-brand text-sm font-medium">推荐 · 全部功能 + JD匹配 + 改写示例</span>
+              <span className="text-brand text-sm font-medium">推荐 · 解锁全部能力</span>
             </div>
             <div className="grid md:grid-cols-3 gap-5">
-              <PriceCard plan="pro_weekly" price="¥19.9" desc="/周" features={['5次AI分析', '全部优化功能', 'JD精准匹配', '逐条改写示例']} current={user?.plan === 'pro_weekly'} />
-              <PriceCard plan="pro_monthly" price="¥49" desc="/月" features={['12次AI分析', '全部优化功能', 'JD精准匹配', '逐条改写示例', '优先客服']} current={user?.plan === 'pro_monthly'} highlight badge="最受欢迎" />
-              <PriceCard plan="pro_quarterly" price="¥99" desc="/季" features={['30次AI分析', '全部优化功能', '求职全周期覆盖', '新功能优先体验']} current={user?.plan === 'pro_quarterly'} badge="最划算" />
+              <PriceCard plan="pro_weekly" price="¥19.9" desc="/周" dailyPrice="¥2.8/天" features={['5次AI分析', '全部优化功能', 'JD精准匹配', '逐条改写示例']} current={user?.plan === 'pro_weekly'} />
+              <PriceCard plan="pro_monthly" price="¥49" desc="/月" dailyPrice="¥1.6/天" features={['12次AI分析', '全部优化功能', 'JD精准匹配', '逐条改写示例', '优先客服']} current={user?.plan === 'pro_monthly'} highlight badge="最受欢迎" savings="省¥30" />
+              <PriceCard plan="pro_quarterly" price="¥99" desc="/季" dailyPrice="¥1.1/天" features={['30次AI分析', '全部优化功能', '求职全周期覆盖', '新功能优先体验']} current={user?.plan === 'pro_quarterly'} badge="最划算" savings="省¥99" />
             </div>
           </div>
 
@@ -500,10 +525,11 @@ function AnalysisReport({ result }: { result: AnalysisResult }) {
   )
 }
 
-function PriceCard({ plan, price, desc, features, current, highlight, badge }: { plan: string; price: string; desc: string; features: string[]; current: boolean; highlight?: boolean; badge?: string }) {
+function PriceCard({ plan, price, desc, dailyPrice, features, current, highlight, badge, savings }: { plan: string; price: string; desc: string; dailyPrice?: string; features: string[]; current: boolean; highlight?: boolean; badge?: string; savings?: string }) {
   return (
-    <div className={`rounded-2xl p-6 border transition-all ${highlight ? 'border-brand bg-brand/5 scale-105' : 'border-border bg-surface-card'}`}>
+    <div className={`rounded-2xl p-6 border transition-all relative ${highlight ? 'border-brand bg-brand/5 scale-105' : 'border-border bg-surface-card'}`}>
       {badge && <div className="text-center mb-3"><span className="bg-brand text-white text-xs px-3 py-1 rounded-full font-medium">{badge}</span></div>}
+      {savings && <div className="absolute top-4 right-4 bg-brand/10 text-brand text-xs px-2 py-0.5 rounded font-medium">{savings}</div>}
       <div className="text-center mb-6">
         <h3 className="font-bold text-lg mb-1">
           {plan === 'free' ? '免费体验' : 
@@ -512,6 +538,7 @@ function PriceCard({ plan, price, desc, features, current, highlight, badge }: {
            plan}
         </h3>
         <div className="flex items-baseline justify-center gap-1"><span className="text-4xl font-black">{price}</span><span className="text-text-muted text-sm">{desc}</span></div>
+        {dailyPrice && <div className="text-text-muted/60 text-xs mt-1">{dailyPrice}</div>}
       </div>
       <ul className="space-y-3 mb-6">{features.map((f) => <li key={f} className="text-text-secondary text-sm flex items-center gap-2"><span className="text-brand">✓</span>{f}</li>)}</ul>
       <button className={`w-full py-3 rounded-xl font-medium text-sm transition-all ${current ? 'bg-border text-text-muted cursor-default' : highlight ? 'bg-brand hover:bg-brand-dark text-white' : 'bg-surface-hover hover:bg-border text-text-primary border border-border'}`}>{current ? '当前方案' : '选择方案'}</button>
