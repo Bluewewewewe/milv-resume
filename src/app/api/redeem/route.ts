@@ -40,15 +40,23 @@ export async function POST(req: NextRequest) {
 
     // 3. 激活会员
     const planMap: Record<string, string> = {
-      'free_3': 'free',      // 3次免费
-      'annual': 'annual',     // 年度
-      'lifetime': 'lifetime', // 终身
+      'free_3': 'free',
+      'weekly': 'weekly',
+      'monthly': 'monthly',
+      'quarterly': 'quarterly',
     }
     const plan = planMap[redeemCode.plan_type] || 'free'
+    const quotaMap: Record<string, number> = {
+      'free': 2,
+      'weekly': 5,
+      'monthly': 12,
+      'quarterly': 30,
+    }
     const durationDays: Record<string, number> = {
-      'free': 30,
-      'annual': 365,
-      'lifetime': 36500, // 100年≈终身
+      'free': 365,       // 免费版长期有效但只有2次
+      'weekly': 7,
+      'monthly': 30,
+      'quarterly': 90,
     }
 
     const { error: memberError } = await admin
@@ -56,7 +64,7 @@ export async function POST(req: NextRequest) {
       .upsert({
         user_id: userId,
         plan: plan,
-        remaining_quota: plan === 'free' ? 3 : 999,
+        remaining_quota: quotaMap[plan],
         expires_at: new Date(Date.now() + durationDays[plan] * 86400000).toISOString(),
         updated_at: new Date().toISOString(),
       }, { onConflict: 'user_id' })
