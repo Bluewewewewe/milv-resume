@@ -40,23 +40,24 @@ export async function POST(req: NextRequest) {
 
     // 3. 激活会员
     const planMap: Record<string, string> = {
-      'free_3': 'free',
-      'weekly': 'weekly',
-      'monthly': 'monthly',
-      'quarterly': 'quarterly',
+      'free_2': 'free',
+      'basic_weekly': 'basic_weekly',
+      'basic_monthly': 'basic_monthly',
+      'basic_quarterly': 'basic_quarterly',
+      'pro_weekly': 'pro_weekly',
+      'pro_monthly': 'pro_monthly',
+      'pro_quarterly': 'pro_quarterly',
     }
     const plan = planMap[redeemCode.plan_type] || 'free'
     const quotaMap: Record<string, number> = {
       'free': 2,
-      'weekly': 5,
-      'monthly': 12,
-      'quarterly': 30,
+      'basic_weekly': 5, 'basic_monthly': 12, 'basic_quarterly': 30,
+      'pro_weekly': 5, 'pro_monthly': 12, 'pro_quarterly': 30,
     }
     const durationDays: Record<string, number> = {
-      'free': 365,       // 免费版长期有效但只有2次
-      'weekly': 7,
-      'monthly': 30,
-      'quarterly': 90,
+      'free': 365,
+      'basic_weekly': 7, 'basic_monthly': 30, 'basic_quarterly': 90,
+      'pro_weekly': 7, 'pro_monthly': 30, 'pro_quarterly': 90,
     }
 
     const { error: memberError } = await admin
